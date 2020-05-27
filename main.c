@@ -6,6 +6,7 @@
 
 int main(int argc, char * argv[])
 {
+	//checking if the user has given more than 1 variable.
 	if(argc!=1)
 	{
 		Validate(argv);

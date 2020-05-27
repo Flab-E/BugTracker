@@ -8,14 +8,13 @@
 
 void Validate(char * flag[])
 {
+	//argv parsed from main function as *char[]
 	if(strcmp(flag[1], "-h")==0 || strcmp(flag[1], "--help")==0)
-	{
-		help();
-	}
+		help();								//help section for '-h' option
 	else if(strcmp(flag[1], "-u")==0 || strcmp(flag[1], "--user")==0)
-		UserValidate();
+		UserValidate();							//user section for '-u' option
 	else if(strcmp(flag[1], "-a")==0 || strcmp(flag[1], "--admin")==0)
-		AdminValidate();
+		AdminValidate();						//admin section for '-a' option
 	else
 		printf("\'-h\' or \'--help\' flag for help section\n");
 }
@@ -23,19 +22,21 @@ void Validate(char * flag[])
 void AdminValidate()
 {
 	char pass[128] = "";
-	printf("Please enter password for admin:\n");
+	printf("\n========== Admin Login ==========\n");
+	printf("Please enter password for admin:");
 	scanf("%s", pass);
 	if(strcmp(pass, "admin123")==0)
-		Admin();
-	else
+		{printf("Login Succesful!\n"); Admin();}							//enter user home section if user
+	else									//enters the password 'admin123
 	{
-		printf("Incorrect password for admin.\n");
-		exit(0);
+		printf("Incorrect password for admin.\n\n\n");
+		AdminValidate();
 	}
 }
 
 void Admin()
 {
+	printf("\n========== Admin Home ==========\n");
 	int ad_choice;
 	printf("[1] Resolve a bug\n");
 	printf("[2] View all Bug reports\n");
@@ -52,8 +53,9 @@ void Admin()
 
 void UserValidate()
 {
+	printf("\n========== User ==========\n");
 	int choice;
-	printf("\n\n\n[1] Login\n");
+	printf("\n[1] Login\n");
 	printf("[2] SignUp\n");
 	printf("[3] Exit\n");
 	printf("Enter choice (1/2): ");
@@ -69,6 +71,7 @@ void UserValidate()
 
 void Login()
 {
+	printf("\n\n\n========== User Login ==========\n");
 	int found = 0;
 	int fielc_count = 0;
 	char us[128];
@@ -76,7 +79,7 @@ void Login()
 	char ch[3096];
 	FILE *fp = fopen("Users.csv", "r");
 
-	printf("Enter Username:\n");
+	printf("Enter Username:\t");
 	scanf("%s", us);
 	if(!fp)
 	{
@@ -103,7 +106,7 @@ void Login()
 		{
 			found = 0;
 			char pa[128];
-			printf("Enter password:\n");
+			printf("Enter password:\t");
 			scanf("%s", pa);
 			if(strcmp(pa, strtok(pass, "\n"))==0)
 			{
@@ -127,44 +130,61 @@ void Login()
 
 void SignUp()
 {
-	printf("Register\n");
+	//variables:
+	printf("\n\n\n========== User Sign Up ==========\n");
 	char us[128];
 	char pa[128];
         FILE * fp = fopen("Users.csv", "a");
-
-	printf("Enter Username:\n");
+	
+	//username and password
+	printf("Enter Username:\t");
 	scanf("%s", us);
-	printf("Enter password:\n");
+	printf("Enter password:\t");
 	scanf("%s", pa);
 
+	//Update Users.csv
         fputs(us, fp);
         fputs(",",fp);
         fputs(pa,fp);
+        fputs("\n",fp);
         fclose(fp);
 	printf("Registration Complete!\n");
+	
+	//Back to User Login
 	Login();
 }
 
 void User(char us[])
 {
+	printf("\n\n\n========== User Home ==========\n");
+	//variables:
 	int user_choice;
+	
+	//print out user options
 	printf("Would you like to:\n");
 	printf("[1] Report a bug\n");
 	printf("[2] View status of your bugs\n");
+	printf("[4] Logout\n");
 	printf("[3] Exit\n");
+	
+	//read user's choice and action
 	scanf("%d", &user_choice);
 	switch(user_choice)
 	{
 		case 1: report(us); break;
 		case 2: UserExtract(us); break;
-		case 3: exit(0); break;
+		case 3: UserValidate(); break;
+		case 4: exit(0); break;
 	}
 }
 
 int rand_gen()
 {
+	//variables
 	time_t t;
 	int rand_num = 0;
+	
+	
 	srand((unsigned) time(&t));
 	for(int i =0; i<6; i++)
 	{
@@ -176,38 +196,52 @@ int rand_gen()
 
 void report(char us[])
 {
+	printf("\n\n\n========== Bug Report ==========\n");
+	time_t t;
+	time(&t);
 	char bugid[10];
 	char user[128];
 	char stat[128] = "Pending";
 	char desc[1024];
+	char prio[10];
 	FILE * fp = fopen("BugReport.csv", "a");
 
 	*user = *us;
 	sprintf(bugid, "%d", rand_gen());
-	printf("Enter bug description:\n");
-	scanf("%s", desc);
+	printf("\nEnter bug description:\n");
+	fflush(stdin);
+        scanf("%[^\n]%*c", desc);
+        fflush(stdin);
+	printf("Enter report priority [High/Medium/Low]:\n");
+	scanf("%[^\n]%*c", desc);
+	
+
+	
 
 	fputs(bugid, fp);
         fputs(",",fp);
         fputs(us,fp);
 	fputs(",", fp);
-	fputs(desc, fp);
+	fputs(strtok(desc,"\n"), fp);
         fputs(",",fp);
         fputs(stat,fp);
+        fputs(",",fp);
+        fputs(prio,fp);
+        fputs(",",fp);
+        fputs(ctime(&t),fp);
         fputs("\n",fp);
+        
         fclose(fp);
 
 	printf("Bug successfully reported with id:%s\n", bugid);
+	User(us);
 }
 
 void UserExtract(char us[])
 {
+	printf("\n\n\n========== %s's Bug Reports ==========\n", us);
 	int found = 1;
-	char *bugid;
-	char *user;
-	char *stat;
-	char *desc;
-	char temp[1024];
+	char *bugid, *user, *desc, *stat, *prio, *curr;
 	int row_count =0,  field_count=0;
 	char ch[3096];
 	FILE *fp = fopen("BugReport.csv", "r");
@@ -224,7 +258,6 @@ void UserExtract(char us[])
 	{
 		found = 1;
 		field_count = 0;
-		*temp = *ch;
 		char *buf = strtok(ch, ",");
 		while(buf)
 		{
@@ -243,6 +276,10 @@ void UserExtract(char us[])
 
 			else if(field_count == 3)
 				stat = buf;
+			else if(field_count == 4)
+				prio = buf;
+			else if(field_count == 5)
+				curr = buf;
 			else
 				printf("Unknown error\n");
 			field_count++;	
@@ -252,16 +289,18 @@ void UserExtract(char us[])
 			buf = strtok(NULL, ",");
 		}
 		if(found == 0)
-			printf("\nbugid:\t\t%s\nUsername:\t%s\nRepors:\t\t%s\nStatus:\t\t%s\n", bugid, user, desc, stat);
+			printf("\nbugid:\t\t%s\nUsername:\t%s\nRepors:\t\t%s\nStatus:\t\t%s\nPriority:\t%s\nTime:\t\t%s\n", bugid, user, desc, stat, prio, curr);
 	}
 	fclose(fp);
+	User(us);
 }
 
 
 void Resolve()
 {
+	printf("\n========== Admin Resolve Update ==========\n");
 	FILE *fp, *fp1, *fp2;
-	char *bugid, *user, *desc, *stat;
+	char *bugid, *user, *desc, *stat, *prio, *curr;
 	int field_count = 0, found = 1;
 	char res_bugid[10], ch[3096], chre[3096];
         fp1 = fopen("BugReport.csv", "r");
@@ -293,7 +332,7 @@ void Resolve()
 		}
 		if(strcmp(res_bugid, bugid)==0)
 		{
-			stat = "Resolved\n";
+			stat = "Resolved";
 			fputs(bugid, fp2);
         		fputs(",",fp2);
         		fputs(user,fp2);
@@ -301,6 +340,10 @@ void Resolve()
 			fputs(desc, fp2);
         		fputs(",",fp2);
         		fputs(stat,fp2);
+        		fputs(",",fp2);
+        		fputs(prio,fp2);
+        		fputs(",",fp2);
+        		fputs(curr,fp2);
 		}
 		else
 		{
@@ -311,6 +354,9 @@ void Resolve()
 			fputs(desc, fp2);
         		fputs(",",fp2);
         		fputs(stat,fp2);
+        		fputs(prio,fp2);
+        		fputs(",",fp2);
+        		fputs(curr,fp2);
 		}
 	}
 	fclose(fp1);
@@ -342,11 +388,12 @@ void Resolve()
 	fclose(fp);
 	
 	View();
+	Admin();
 }
 
 void View()
 {
-	printf("\n\nAll Bug Reports:\n");
+	printf("\n\n\n========== All Bug Reports ==========\n");
 	int field_count=0;
 	char ch[3096];
 	FILE *fp = fopen("BugReport.csv", "r");
@@ -372,13 +419,16 @@ void View()
 				printf("Report:\t\t%s\n", buf);
 			else if(field_count == 3)
 				printf("Status:\t\t%s\n\n", buf);
+			else if(field_count == 4)
+				printf("Priority:\t%s\n", buf);
+			else if(field_count == 5)
+				printf("Time:\t\t%s\n\n", buf);
 			else
 				printf("Unknown error\n");
 			field_count++;		
 			buf = strtok(NULL, ",");
 		}
-//		printf("\nbugid:\t\t%s\nUsername:\t%s\nRepors:\t\t%s\nStatus:\t\t%s\n", bugid, user, desc, stat);
 	}
 	fclose(fp);
-
+	Admin();
 }
