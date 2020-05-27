@@ -18,3 +18,4 @@ void UserExtract(char us[]);		//to outpu user's bug reports
 void report(char us[]);			//user's bug report section
 void Resolve(void);			//admin's bug resolved section
 void View(void);			//view all bug reports
+void SearchBug(void);			//Search for Bugs based on query
